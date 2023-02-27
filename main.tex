@@ -37,6 +37,14 @@ After all, even though domain-specific systems are often based on DSAs, it is th
 
 Although the above issues should be discussed case by case in real scenarios, whether we can find some general guidelines to improve them has a decisive impact on the future of domain-specific systems.
 
+Here I want to give a brief answer to the second question.
+My answer consists of two points:
+\begin{enumerate}
+    \item DSLs have very different ecological niches than PLs.
+    \item DSLs can be (and should be) made simple enough, even simpler than PLs.
+\end{enumerate}
+Many functional languages fail at the second point, while Kotlin (a new PL combining the advantages of Scala, C\#, and Java, and rather easy to learn and use) fails at the first point (its ecological niche is too identical to Java).
+
 % \subsection{Why Can Domain-Specific Systems Succeed in the Future}
 % Domain-specific systems are super inspiring and exciting, but to justify the effort of this essay, I still need to briefly discuss why I think they will probably be a huge hit in the future.
 % Instead of talking about the advantages of these systems as many people do, I choose to address some of the common concern towards these systems.
@@ -181,7 +189,7 @@ And I am not sure if there will be other brand-new technologies to improve this.
 However, if this can not be addressed, this should no longer be a problem, but a phenomenon to be considered.
 
 \subsubsection*{Larger memory, But Not More Complex Memory Subsystems}
-More programs will be memory bound, together with the improvement of semiconductor manufacture, larger memory (in each layer of the memory hierarchy) is highly anticipated.
+More programs will be memory bound, together with the improvement of the fabrication technology, larger memory (in each layer of the memory hierarchy) is highly anticipated.
 
 However, more complex memory subsystems leads to less predictable performance and harder compiler development, which goes against the argument I raised in ``Benchmark" subsection that for domain-specific systems, it is the performance that can be utilized by the compilers that truly matters.
 
@@ -189,4 +197,9 @@ However, more complex memory subsystems leads to less predictable performance an
 The difference of die size between smaller cores and larger ones is stunning -- in current Intel CPUs, the die size of a large core is equivalent to that of four small cores.
 
 Small cores are simpler, thus easier to be exploited by compilers.
+
+\subsubsection*{Gap between Specialized and General Hardware to be Filled}
+As far as I am concerned, famous hardware is either rather general (e.g., GPU) or rather specialized (e.g., TPU v1 can only perform three kinds of operations -- convolution, matrix multiplication, and activation).
+In this way, we only afford to build DSAs for very few applications.
+This gap may be closed in some way in the future.
 \end{document}
