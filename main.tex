@@ -12,8 +12,117 @@
 
 \maketitle
 
-\section{Introduction}
+\section{Overview}
 
+\subsection{Concentration}
+This essay is devoted to figuring out the respective responsibilities in hardware-software codesign in the coming years (and maybe decades).
+I will mainly focus on domain-specific systems in this essay.
+By "domain-specific systems", I am referring to \textbf{domain-specific languages, domain specific compilers, and domain-specific architecture as a whole}.
 
+Based on my background, most of the discussions on design and implementations will be dedicated to software (programming languages and compilers).
+For hardware, I will restrict the discussion to their responsibilities and leave out design details.
 
+Besides, only computation tasks are considered.
+That being said, IO intensive tasks are beyond the scope of this essay.
+
+\subsection{Why Can Domain-Specific Systems Succeed in the Future}
+Domain-specific systems are super inspiring and exciting, but to justify the effort of this essay, I still need to briefly discuss why I think they will probably be a huge hit in the future.
+Instead of talking about the advantages of these systems as many people do, I choose to address some of the common concern towards these systems.
+
+\subsubsection*{Concern 1: By Being Domain-Specific, There Will Not Be Enough Users, Making It Hard to Cover the Cost of Developing Such a System.}
+Development of domain-specific systems can swift enough in the future (I will discuss this in this essay) so that the benefits of such systems can justify its development.
+Admittedly, how to achieve this is a key issue in the future success of domain-specific systems.
+
+\subsubsection*{Concern 2: Learning a New Language Takes Time. How to Persuade the Programmers?}
+On one hand, domain-specific languages can be more user-friendly (the development of mainstream programming languages in the recent two decades makes me believe this, and I will certainly discuss this issue below).
+On the other hand, programming paradigms are limited.
+Put it another way, although there can be thousands of domain-specific languages, there can only be dozens of programming paradigms.
+Therefore, programming models of many domain-specific languages can be similar enough, rendering it feasible for programmers to learn new languages frequently.
+
+\subsubsection*{Concern 3: Niches Languages Typically Have Poor Toolchains, Rendering it Hard to Use.}
+Development of toolchains should be given enough considerations in the design of domain-specific languages.
+And this can also be developed in similar ways as the development of compilers.
+The toolchains based on LLVM can be good examples.
+
+\subsection{Benchmark}
+Systems should be analyzed in a quantitative ways, and there is no exception for the systems we are dealing with.
+I argue that, in sharp contrast to existing benchmarks like SPEC where hand-optimized code is used (the performance of the hardware is exploited by experts), benchmarks for domain-specific systems should be based on code optimized by compilers.
+In other words, \textbf{only performance that can be exploited automatically by compilers matters.}
+Otherwise, it would be impossible to accommodate thousands of languages in the computer industry.
+
+The argument above has many implications.
+For instance, since more optimization is taken care of by compilers, techniques like auto-scheduling will play a more important role, which in turn requires us to find better abstraction for our programming model (otherwise it would be impossible or too costly to do such things).
+
+\section{Design Goals}
+The goals here refer to the goals of the whole systems. Besides three goals emphasized by programming languages (\textbf{performance, productivity, safety}), one goal commonly added for domain specific languages (\textbf{generality}), and three main goals in computer architecture (\textbf{performance, power, cost}), I argue that another two goals should also be given the same emphasis:
+\begin{enumerate}
+    \item Cost of developing such a system.
+    Domain-specific systems are inherently much less popular than general ones, so the non-recurring expenditure is a serious issue.
+    \item Flat learning curve.
+    That means, the system should be easy enough for beginners.
+\end{enumerate}
+
+\section{General Approach}
+Granted, "codesign" means both the hardware and the software should be considered at the same time in the process of design, and thus the top-down approach and the bottom-up approach are both indispensable.
+I argue that, \textbf{for the sake of user-friendliness, the top-down one should be given more priority.}
+If we want programmers to think such a system is easy to learn and easy to use, we had better start from their perspective.
+In the past, many system designers adopted the bottom up ones and overlook the other, resulting in systems that looked really ugly and inconvenient for programmers.
+For example, Intel has many hardware features that may be powerful but are so hard to use by programmers, rendering them white elephants.
+
+For the same reason, the discussion below will be organized in a top-down way.
+
+\section{Languages}
+To speed up the development of languages and their toolchains, embedding them in a "mother languages" is a preferable to developing an external language.
+What's more, the ecosystem of the mother language also provides great support for the language itself.
+
+\subsection{Idea Features of the "Mother Language"}
+There are several mainstream languages frequently used as mother languages: Scala, Python, C\#, C++, Haskell, etc.
+In my opinion, Scala is probably the best one due to the following reasons:
+\begin{enumerate}
+    \item Supporting plenty of programming paradigms.
+    As a programming language, Scala can be too complicated.
+    Scala programmers often just need a subset of its features to work on their projects.
+    However, to support various kinds of domain-specific languages on it, this complexity can be a significant strength.
+    For example, the type system of Scala is the most complex one I have ever heard of due to its complete support for both functional programming and object-oriented programming, but this is really helpful for developing languages of different paradigms on it.
+    Note that this does not contradict the goal that the learning curve of a flat learning curve, since programmers only need a (small) subset of Scala to use a domain-specific language based on Scala.
+    \item Flexibility.
+    Although Haskell is even more expressive than Scala, it is no match for the latter in terms of flexibility.
+    Scala can not only express what you want, but express it in the way you want.
+\end{enumerate}
+
+However, Scala also has several serious drawbacks as a mother languages, and I will also discuss possible improvement below:
+\begin{enumerate}
+    \item Slow compilation.
+    The slowness is due to its complexity.
+    But for a certain domain-specific language based on it, typically only a small subset of its syntax it needed.
+    Language features can be made modular -- an extension should be enabled only when the programmer explicit enable it in their code (as the case for GHC extension).
+    \item Too many features make code reading difficult.
+    Though programmers may just need a small subset of language features to write code in the domain-specific languages, others may use other complicated features.
+    Here is a personal experience:
+    I knew the syntax of Spark, but others used "implicit" (an obscure and unique feature of Scala); as a result, I had a difficulty reading the code.
+    This disadvantage can also be solved by making language features modular.
+    Developers of domain-specific languages can require that what feature extensions can be used to restrict the complexity.
+\end{enumerate}
+\subsection{Key Issues of Designing Domain-Specific Languages}
+\subsubsection*{Achieving High Performance in Declarative Paradigms}
+So far, in mainstream programming languages, when it comes to performance, declarative ones are no match for imperative ones.
+However, obviously declarative styles is more favorable in terms of productivity, correctness, and verification (the learning curve can also be flatter if properly designed).
+Domain-specific languages should be kept declarative, and the performance should be achieved by finding proper abstractions and the effort of compilers.
+
+The performance of functional languages have be improved significantly in recent years, but a gap still remains (no more than 3X at the moment).
+From the perspective of parallel computing, the two most important factors of performance are parallelism and locality.
+With appropriate abstractions that provides enough semantics such as the lack of dependencies, compilers can do a good job in exploiting potential parallelism because they can be formalized.
+However, compiler optimizations for locality is worse, and one of the key reasons is the complex and often unpredictable memory hierarchy.
+With the gap between processors and memory growing, hardware architect are making the memory hierarchy more complex, which becomes a really tough problem for compiler optimizations.
+I think, in the future, we will have larger memory, but the hierarchy will be simpler and thus more predictable, rendering it more feasible for compilers to exploits the memory subsystem and predict its performance, and even do a good job in managing them in software (I will further discuss this in the "Hardware" section).
+
+\subsubsection*{Being Functional Is Good, But Not Too Functional}
+Functional styles have been proved to be expressive, efficient and productive.
+However, functional languages are always hard for average programmers.
+\section{Compilers}
+\subsubsection*{Carrying out the Important Optimizations, but Not Too Many}
+\section{Hardware}
+\subsubsection*{Memory Bandwidth Becoming the Bottleneck More Often}
+\subsubsection*{Larger memory, But Not More Complex Hierarchy}
+\subsubsection*{More Small Cores Rather Than Fewer Larger Cores}
 \end{document}
