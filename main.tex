@@ -18,7 +18,7 @@
 This essay is devoted to figuring out the respective responsibilities of each component and the future trends in hardware-software codesign in the coming years (and maybe decades), and it focuses on domain-specific systems.
 By ``domain-specific systems", I am referring to \textbf{domain-specific languages (DSLs), domain specific compilers (DSCs), and domain-specific architectures (DSAs) as a whole}.
 
-Most of the discussions on design and implementations will be dedicated to software, while for hardware, the discussion will be restricted to their responsibilities.
+Most of the discussions on design and implementations will be dedicated to software;  for hardware, the discussion will be restricted to their responsibilities.
 
 Only computation tasks are considered.
 IO intensive tasks are beyond the scope.
@@ -29,19 +29,18 @@ As a convention in this essay, ``developers" refers to the developers of systems
 Despite their rapid development in recent year, concern remain about their future:
 \begin{enumerate}
     \item Can the benefits of such a system justify the cost of its development?
-    \item Given that the industry is conservative on programming languages (PLs), how to persuade programmers into adopting a new DSL?
+    \item Given that the industry is conservative on programming languages (PLs), will programmers be persuaded into adopting a new DSL?
     \item Niche languages typically have poor toolchains.
 \end{enumerate}
 These problems are raised from the perspective of programmers.
-After all, even though domain-specific systems are often based on DSAs, it is the language that is what programmers (i.e., users of the systems) directly deal with.
+After all, even though domain-specific systems are often based on DSAs, it is the languages that are what programmers directly deal with.
 
 Although the above issues should be discussed case by case in real scenarios, whether we can find some general guidelines to improve them has a decisive impact on the future of domain-specific systems.
 
-Here I want to give a brief answer to the second question.
-My answer consists of two points:
+\subsubsection*{Brief Answer to the Second Question}
 \begin{enumerate}
     \item DSLs have very different ecological niches than PLs.
-    \item DSLs can be (and should be) made simple enough, even simpler than PLs.
+    \item DSLs can be (and should be) made simple enough, even much simpler than PLs in most cases.
 \end{enumerate}
 Many functional languages fail at the second point, while Kotlin (a new PL combining the advantages of Scala, C\#, and Java, and rather easy to learn and use) fails at the first point (its ecological niche is too identical to Java).
 
@@ -66,15 +65,18 @@ Many functional languages fail at the second point, while Kotlin (a new PL combi
 
 \subsection{Benchmark}
 % Systems should be analyzed in a quantitative ways, and there is no exception for the systems we are dealing with.
-I argue that, in sharp contrast to existing benchmarks like SPEC where hand-optimized code is used (the performance of the hardware is exploited by experts), benchmarks for domain-specific systems should be based on code optimized by compilers.
+I argue that, in sharp contrast to existing benchmarks like SPEC where hand-optimized code is used (the performance of the system is exploited by experts), benchmarks for domain-specific systems should be based on code optimized by compilers.
 In other words, \textbf{only performance that can be exploited automatically by compilers matters.}
 Otherwise, it would be impossible to accommodate thousands of languages in the computer industry.
+
+I am not denying the importance of manual optimizations in domain-specific systems.
+I just want to emphasize the importance of automatic optimizations especially for less popular domain-specific systems.
 
 % The argument above has many implications.
 % For instance, since more optimization is taken care of by compilers, techniques like auto-scheduling will play a more important role, which in turn requires us to find better abstraction for our programming model (otherwise it would be impossible or too costly to do such things).
 
 \section{Design Goals}
-The goals here refer to the goals of the whole systems. Besides three goals emphasized by PLs (\textbf{performance, productivity, safety}), one goal commonly added for domain specific languages (\textbf{generality}), and three main goals in computer architecture (\textbf{performance, power, cost}), I argue that another two goals should also be given the same emphasis:
+The goals here refer to the goals of the whole systems. Besides three goals emphasized by PLs (\textbf{performance, productivity, safety}), one goal commonly added for DSLs (\textbf{generality}), and three main goals in computer architecture (\textbf{performance, power, cost}), I argue that another two goals should also be given the same emphasis:
 \begin{enumerate}
     \item Cost of developing such a system.
     Domain-specific systems are inherently much less popular than general ones, so the non-recurring expenditure is a serious issue.
@@ -83,8 +85,8 @@ The goals here refer to the goals of the whole systems. Besides three goals emph
 \end{enumerate}
 
 \section{General Approach}
-Granted, "codesign" means both the hardware and the software should be considered at the same time, and thus the top-down approach and the bottom-up approach are both indispensable.
-I argue that, \textbf{for the sake of user-friendliness, the top-down one should be given more priority.}
+Granted, ``codesign" means both the hardware and the software should be considered at the same time, and thus the top-down approach and the bottom-up approach are both indispensable.
+However, I argue that, \textbf{for the sake of user-friendliness, the top-down one should be given more priority.}
 % If we want programmers to think such a system is easy to learn and easy to use, we had better start from their perspective.
 % In the past, many system designers adopted the bottom up ones and overlook the other, resulting in systems that looked really ugly and inconvenient for programmers.
 % For example, Intel has many hardware features that may be powerful but are so hard to use by programmers, rendering them white elephants.
@@ -92,29 +94,30 @@ I argue that, \textbf{for the sake of user-friendliness, the top-down one should
 For the same reason, the discussion below will be organized in a top-down way.
 
 \section{Languages}
-To speed up the development of languages and their toolchains, embedding them in a ``mother languages" is a preferable to developing an external language.
-What's more, the ecosystem of the mother language also provides great support for the language itself.
+To speed up the development of languages and their toolchains, embedding them in a ``mother languages" is preferable to the external approach.
+What's more, the ecosystem of the mother language also helps a lot.
 
 \subsection{Ideal Features of the ``Mother Language"}
-There are several mainstream languages frequently used as mother languages: Scala, Python, C\#, C++, Haskell, etc.
+Several mainstream languages are frequently used as mother languages: Scala, Python, C\#, C++, Haskell, etc.
 In my opinion, Scala is probably the best one since:
 \begin{enumerate}
     \item Supporting many programming paradigms.
-    As a PL, it is too complicated -- Scala programmers often just need a subset of its features.
+    As a PL, it is too complicated -- programmers often just need a subset of its features.
     However, to support various kinds of DSLs, this can be a significant strength, e.g., its type system is the most complex one I have ever heard of, but this is really helpful for developing languages of different paradigms.
     This does not contradict the goal of a flat learning curve, since programmers only need a (small) subset of Scala to use a DSL.
     \item Flexibility.
     Although Haskell is even more expressive than Scala, it is no match for the latter in terms of flexibility.
-    Scala can not only express what you want, but express it in the way you want.
+    Scala can not only express what you want, but express it \textbf{in the way you want}.
 \end{enumerate}
 
 However, Scala also has several serious drawbacks as a mother languages:
 \begin{enumerate}
     \item Slow compilation (due to its complexity).
     But for a DSL, typically only a small subset of its syntax is needed.
-    Language features can be made \textbf{modular} -- an extension should be enabled explicitly (as the case for GHC extension).
+    My idea is that language features can be made \textbf{modular} -- extensions should be enabled explicitly (as the case for GHC extension), and some compiler checks should be able to be disabled (Scala has done some of the latter).
     \item Too many features make code reading difficult.
     Others programmers of the same DSL may use complicated features.
+    When I was developing on Spark, I knew the syntax of Spark but still obfuscated by others' usage of ``implicit" (an obscure and unique feature of Scala); as a result, I had a difficulty reading others' code.
     % Here is a personal experience:
     % I knew the syntax of Spark, but others used "implicit" (an obscure and unique feature of Scala); as a result, I had a difficulty reading the code.
     This can also be addressed by making language features modular.
@@ -128,7 +131,7 @@ I argue that \textbf{DSLs should be kept declarative, and the performance should
 
 The performance of functional languages have be improved significantly in recent years, but a gap still remains (no more than 3X at the moment).
 From the perspective of parallel computing, the two most important factors of performance are parallelism and locality.
-With appropriate abstractions, compilers can do a good job in exploiting potential parallelism, but compiler optimizations for locality is worse, and one of the key reasons is the complex and often unpredictable memory hierarchy (I will further discuss this in the "Hardware" section).
+With appropriate abstractions, compilers does a good job in exploiting parallelism, but their optimizations for locality is far worse, and one of the key reasons is the complex memory hierarchy whose performance is often unpredictable (I will further discuss this in the ``Hardware" section).
 % With the gap between processors and memory growing, hardware architect are making the memory hierarchy more complex, which becomes a really tough problem for compiler optimizations.
 % I think, in the future, we will have larger memory, but the hierarchy will be simpler and thus more predictable, rendering it more feasible for compilers to exploits the memory subsystem and predict its performance, and even do a good job in managing them in software 
 
@@ -136,31 +139,38 @@ With appropriate abstractions, compilers can do a good job in exploiting potenti
 % Functional styles have been proved to be expressive, efficient and productive.
 % However, functional languages are always hard for average programmers.
 
+With memory bandwidth (instead of disks, network, etc) becoming the bottleneck, more projects are switching to C++ or Rust.
+For instance, Databricks is rewriting part of Spark in C++.
+Admittedly, for mainstream PLs, we still have not figured out how to achieve high performance and safety but still keep the PL simple enough.
+However, for DSLs to be adopted, I do not think the C++/Rust-like approach is reasonable -- they are really too erroneous (C++) or too hard (Rust) for average programmers!
+Fortunately, DSLs are only responsible for specialized scenarios, leading to possible solutions to this dilemma, e.g., some machine learning DSLs like PyTorch and Jax are both performant and easy to use.
+In addition, we also have some requirements for the underlying hardware to make compiler optimizations effective enough (so that programmers can be free from manual optimizations).
+
 \subsubsection*{Different DSLs Can Have Similar Programming Models}
-There can be thousands of DSLs, but only a few dozens of programming paradigms, which implies many DSLs can be more or less similar in terms of their programming models.
-This has significant advantages:
+There can be thousands of DSLs, but only dozens of programming paradigms, which implies many DSLs can be similar in programming models.
+This leads to significant advantages:
 \begin{enumerate}
     \item Swift development of DSCs and toolchains.
-    Developers of such a system can also benefit from lessons of developing similar ones.
-    \item Programmers of DSLs can enjoy shorter learning time if they have experiences on similar DSLs.
+    Developers of such a system can benefit from lessons of developing similar ones.
+    \item Programmers of DSLs enjoy shorter learning time if they have experiences on similar DSLs.
     \item Similarity of DSLs makes them easier to run on the same DSAs.
 \end{enumerate}
 \section{Compilers}
 \subsubsection*{Carrying out the Most Important Optimizations, but Not Too Many}
-Pareto principle matters.
-Swift development of DSCs requires the developers to find the few optimizations that make a huge difference (and it often can be done in compilers).
-This principle is especially important for the first few versions of DSCs.
-Besides, compilation speed also argue towards this.
+The Pareto principle matters.
+Swift development of DSCs requires the developers to find the few optimizations that make a huge difference (and it can often be found).
+This is especially important for the first few versions of DSCs.
+Compilation speed also argue towards this.
 
-If DSLs and DSAs can be more or less similar to one another, it will also help DSC developers to figure out what optimizations to carry out.
+If DSLs and DSAs can besimilar to one another, it will also help DSC developers to figure out what optimizations to carry out in a shorter period of time.
 \subsubsection*{DSC Generators}
 Just like parser generators like YACC, DSCs may also have their generators.
 However, in contrast to parser generators, a DSC generator is probably only responsible for generating (part of) compilers for DSLs of similar programming models.
 
 This argument shows again how helpful it will be if many DSLs have similar programming models.
 \subsubsection*{Better Compiler Infrastructure for Developing Toolchains}
-LLVM has become the infrastructure of many toolchains of PLs.
-We need a similar one for DSCs, since LLVM is not flexible and convenient enough if we have many DSLs.
+LLVM has become the infrastructure of many PL toolchains.
+We need a similar one (maybe ones) for DSCs, since LLVM is not flexible and convenient enough if we have many DSLs.
 
 Development of toolchains should be considered when designing DSCs; otherwise, programmers will be reluctant to use the DSL.
 
@@ -177,7 +187,7 @@ Admittedly, any one below is still the bottleneck in some scenarios, but I focus
     \item Disk.
     With the rapid development of SSDs and the increasing capacity of main memory, this is becoming less of an issue.
     \item Network.
-    Again, with the rapid improvement of Ethernet and other customized network technologies in datacenters, this is also less of an issue now (as proved by the emergence of disaggregated storage).
+    Again, with the rapid improvement of Ethernet and other customized network technologies in datacenters, this is also less of an issue now (as proved by the emergence of disaggregated storage). In the era of the advent of MapReduce, network was the greatest bottleneck in distributed computing, but the landscape has changed a lot since then.
     \item Memory latency.
     This is one of the core bottleneck of instruction-level parallelism, but domain-specific systems are often designed to exploiting data-level and task-level parallelism, where latency is less important than bandwidth.
     \item Number of processor cores.
@@ -192,14 +202,25 @@ However, if this can not be addressed, this should no longer be a problem, but a
 More programs will be memory bound, together with the improvement of the fabrication technology, larger memory (in each layer of the memory hierarchy) is highly anticipated.
 
 However, more complex memory subsystems leads to less predictable performance and harder compiler development, which goes against the argument I raised in ``Benchmark" subsection that for domain-specific systems, it is the performance that can be utilized by the compilers that truly matters.
+Besides, if the memory subsystem is regular and predictable enough, compiler-managed cache can be a good idea.
 
 \subsubsection*{More Small Cores Rather Than Fewer Larger Cores}
-The difference of die size between smaller cores and larger ones is stunning -- in current Intel CPUs, the die size of a large core is equivalent to that of four small cores.
+The difference of die size between smaller cores and larger ones is stunning -- in current Intel CPUs (12th and 13th generation of Core), the die size of a large core is equivalent to that of four small cores.
 
-Small cores are simpler, thus easier to be exploited by compilers.
+Small cores are simpler in many ways (e.g., simpler pipeline and cache), thus easier to be exploited by compilers.
 
 \subsubsection*{Gap between Specialized and General Hardware to be Filled}
-As far as I am concerned, famous hardware is either rather general (e.g., GPU) or rather specialized (e.g., TPU v1 can only perform three kinds of operations -- convolution, matrix multiplication, and activation).
+As far as I am concerned, famous hardware is either rather general (e.g., GPU) or rather specialized (e.g., TPU v1 can only perform three kinds of operations -- convolution, matrix multiplication, and activation \cite{hennessy2017computer}).
 In this way, we only afford to build DSAs for very few applications.
 This gap may be closed in some way in the future.
+DSAs like the ones that can do all kinds of tensor algebra (Sparse Abstract Machine \cite{hsu2022sparse}) are consistent with my argument here.
+
+\bibliographystyle{plain}
+\bibliography{reference}
+
+\section*{Postscript}
+This essay may be too ambitious while too ambiguous.
+By writing down some insights and thinking about related issues, I did learn a lot from this process.
+Sorry for the obvious drawbacks of this essay.
 \end{document}
+
